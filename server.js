@@ -92,10 +92,16 @@ async function processAudioFile(audioFileName) {
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.raw({ type: "audio/wav", limit: "10mb" })); // Handle raw audio data
+app.use(bodyParser.raw({ type: "audio/wav", limit: "10mb" }));
 
 app.get("/health-check", (req, res) => {
   res.status(200).send("Server is up and running!");
+});
+
+app.get("/get-data", async (req, res) => {
+  const collection = db.collection("myCollection");
+  const entries = await collection.find({}).toArray();
+  res.status(200).send(entries);
 });
 
 app.post("/upload-gps", (req, res) => {
@@ -103,7 +109,7 @@ app.post("/upload-gps", (req, res) => {
     return res.status(400).send("No audio data received.");
   }
 
-  const timestamp = Date.now();
+  const timestamp = Math.floor(Date.now() / 1000);
   const audioFileName = `gps_${timestamp}.json`;
 
   const savePath = path.join(__dirname, "uploads", audioFileName);
@@ -133,7 +139,7 @@ app.post("/upload-audio", (req, res) => {
     return res.status(400).send("No audio data received.");
   }
 
-  const timestamp = Date.now();
+  const timestamp = Math.floor(Date.now() / 1000);
   const audioFileName = `audio_${timestamp}.wav`;
 
   const savePath = path.join(__dirname, "uploads", audioFileName);
