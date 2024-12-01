@@ -4,6 +4,7 @@ import librosa
 import pandas as pd
 import urllib.request
 import argparse
+import sys
 
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 
@@ -38,9 +39,10 @@ def detect_human_voice(file_path, threshold=0.2):
     return "Human Voice" if human_voice_detected else "No Human Voice"
 
 if __name__ == "__main__":
-    file_path = "example.wav"  
+    if len(sys.argv) < 1:
+        print("Usage: python script.py <arg1>")
+        sys.exit(1)
+    file_path = sys.argv[1]
+    print(file_path)
     result = detect_human_voice(file_path)
     print(f"Prediction: {result}")
-
-
-
