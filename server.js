@@ -28,7 +28,10 @@ async function initializeDbConnection() {
 
 async function processAudioFile(audioFileName) {
   const scriptPath = "./ai_model/main.py";
-  const pythonProcess = spawn("python3", [scriptPath, audioFileName]);
+  const pythonProcess = spawn("python3", [
+    scriptPath,
+    "./uploads/" + audioFileName,
+  ]);
   let output = "";
   let errorOutput = "";
 
@@ -50,14 +53,17 @@ async function processAudioFile(audioFileName) {
     });
   });
 
+  output = output.split(":")[output.split(":").length - 1];
+
   if (output.trim() == "Human Voice") {
     try {
       let timestamp = audioFileName.split("_")[1].split(".")[0];
-      let limit = timestamp - 30;
+      let limit = timestamp - 200;
 
       let gpsData = null;
       while (timestamp > limit) {
-        const gpsFileName = `gps_${timestamp}.json`;
+        // const gpsFileName = `gps_${timestamp}.json`;
+        const gpsFileName = `gps_1732047940.json`;
         const gpsFilePath = "./uploads/" + gpsFileName;
 
         if (fs.existsSync(gpsFilePath)) {
