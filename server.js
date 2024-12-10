@@ -26,11 +26,11 @@ async function initializeDbConnection() {
   }
 }
 
-async function processAudioFile(audioFileName) {
+async function processAudioFile(audioFileName, senderId, timestampDB) {
   const scriptPath = "./ai_model/main.py";
   const pythonProcess = spawn("python3", [
     scriptPath,
-    "./uploads/" + audioFileName,
+    "./uploaded-audio/" + audioFileName,
   ]);
   let output = "";
   let errorOutput = "";
@@ -45,7 +45,6 @@ async function processAudioFile(audioFileName) {
 
   await new Promise((resolve) => {
     pythonProcess.on("close", (code) => {
-      console.log(`Python process exited with code ${code}`);
       if (code !== 0) {
         console.error(`Python script error: ${errorOutput}`);
       }
@@ -57,14 +56,15 @@ async function processAudioFile(audioFileName) {
 
   if (output.trim() == "Human Voice") {
     try {
-      let timestamp = audioFileName.split("_")[1].split(".")[0];
-      let limit = timestamp - 200;
+      console.log("Human voice detected for: " + audioFileName);
+      let timestamp = audioFileName.split("_")[2].split(".")[0];
+      let limit = timestamp - 500;
 
       let gpsData = null;
       while (timestamp > limit) {
-        // const gpsFileName = `gps_${timestamp}.json`;
-        const gpsFileName = `gps_1732047940.json`;
-        const gpsFilePath = "./uploads/" + gpsFileName;
+        const gpsFileName = `${senderId}_gps_${timestamp}.json`;
+        // const gpsFileName = `gps_1732047940.json`;
+        const gpsFilePath = "./uploaded-gps/" + gpsFileName;
 
         if (fs.existsSync(gpsFilePath)) {
           console.log(`Found GPS file: ${gpsFileName}`);
@@ -81,18 +81,17 @@ async function processAudioFile(audioFileName) {
 
       const collection = db.collection("myCollection");
       await collection.insertOne({
-        timestamp,
+        timestamp: timestampDB,
         audioFileName,
         longitude: gpsData.longitude,
         latitude: gpsData.latitude,
       });
       console.log("inserted.");
-      console.log("gpsData: ", gpsData);
     } catch (err) {
       console.error("Error: ", err);
     }
   } else {
-    console.log("Not a human voice");
+    console.log("Not a human voice: " + audioFileName);
   }
 }
 
@@ -111,17 +110,24 @@ app.get("/get-data", async (req, res) => {
 });
 
 app.post("/upload-gps", (req, res) => {
+  const senderId = req.query.id;
+
+  if (!senderId) {
+    console.log("No sender ID provided.");
+    return res.status(400).send("No sender ID provided.");
+  }
+
   if (!req.body || req.body.length === 0) {
-    return res.status(400).send("No audio data received.");
+    return res.status(400).send("No gps data received.");
   }
 
   const timestamp = Math.floor(Date.now() / 1000);
-  const audioFileName = `gps_${timestamp}.json`;
+  const gpsFileName = `${senderId}_gps_${timestamp}.json`;
 
-  const savePath = path.join(__dirname, "uploads", audioFileName);
+  const savePath = path.join(__dirname, "uploaded-gps", gpsFileName);
 
-  if (!fs.existsSync(path.join(__dirname, "uploads"))) {
-    fs.mkdirSync(path.join(__dirname, "uploads"));
+  if (!fs.existsSync(path.join(__dirname, "uploaded-gps"))) {
+    fs.mkdirSync(path.join(__dirname, "uploaded-gps"));
   }
 
   const dataToWrite = JSON.stringify(req.body, null, 2);
@@ -129,29 +135,37 @@ app.post("/upload-gps", (req, res) => {
   fs.writeFile(savePath, dataToWrite, (err) => {
     if (err) {
       console.error("Error saving file:", err);
-      return res.status(500).send("Failed to save audio file.");
+      return res.status(500).send("Failed to save gps file.");
     }
 
-    console.log(`Audio file saved: ${audioFileName}`);
+    console.log(`GPS file saved: ${gpsFileName}`);
     res.send({
-      message: "Audio file saved successfully!",
-      filename: audioFileName,
+      message: "GPS file saved successfully!",
+      filename: gpsFileName,
     });
   });
 });
 
 app.post("/upload-audio", (req, res) => {
+  const senderId = req.query.id;
+
+  if (!senderId) {
+    console.log("No sender ID provided.");
+    return res.status(400).send("No sender ID provided.");
+  }
+
   if (!req.body || req.body.length === 0) {
     return res.status(400).send("No audio data received.");
   }
 
-  const timestamp = Math.floor(Date.now() / 1000);
-  const audioFileName = `audio_${timestamp}.wav`;
+  const timestampDB = Date.now();
+  const timestamp = Math.floor(timestampDB / 1000);
+  const audioFileName = `${senderId}_audio_${timestamp}.wav`;
 
-  const savePath = path.join(__dirname, "uploads", audioFileName);
+  const savePath = path.join(__dirname, "uploaded-audio", audioFileName);
 
-  if (!fs.existsSync(path.join(__dirname, "uploads"))) {
-    fs.mkdirSync(path.join(__dirname, "uploads"));
+  if (!fs.existsSync(path.join(__dirname, "uploaded-audio"))) {
+    fs.mkdirSync(path.join(__dirname, "uploaded-audio"));
   }
 
   fs.writeFile(savePath, req.body, (err) => {
@@ -162,7 +176,7 @@ app.post("/upload-audio", (req, res) => {
 
     console.log(`Audio file saved: ${audioFileName}`);
 
-    processAudioFile(audioFileName);
+    processAudioFile(audioFileName, senderId, timestampDB);
 
     res.send({
       message: "Audio file saved successfully!",
@@ -179,8 +193,8 @@ async function contr() {
 
 async function main() {
   await initializeDbConnection();
-  await processAudioFile("audio_1732047940819.wav");
-  await contr();
+  // await processAudioFile("audio_1732047940819.wav");
+  // await contr();
 }
 
 main();

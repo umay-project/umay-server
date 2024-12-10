@@ -1,3 +1,5 @@
 node_modules/
 uploads/
+uploaded-audio/
+uploaded-gps/
 ai_model/example.wav
