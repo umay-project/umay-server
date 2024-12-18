@@ -3,3 +3,5 @@ uploads/
 uploaded-audio/
 uploaded-gps/
 ai_model/example.wav
+tfhub_cache/
+./.DS_Store

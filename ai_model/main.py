@@ -5,6 +5,9 @@ import pandas as pd
 import urllib.request
 import argparse
 import sys
+import os
+
+os.environ["TFHUB_CACHE_DIR"] = "./tfhub_cache"
 
 yamnet_model = hub.load("https://tfhub.dev/google/yamnet/1")
 

@@ -185,6 +185,31 @@ app.post("/upload-audio", (req, res) => {
   });
 });
 
+app.get("/get-records", async (req, res) => {
+  const collection = db.collection("myCollection");
+  const entries = await collection.find({}).toArray();
+  const result = [];
+  const maxLat = req.query.maxLat;
+  const minLat = req.query.minLat;
+  const maxLong = req.query.maxLong;
+  const minLong = req.query.minLong;
+  entries.forEach((entry) => {
+    if (entry.longitude > maxLong || entry.longitude < minLong) {
+      return;
+    }
+    if (entry.latitude > maxLat || entry.latitude < minLat) {
+      return;
+    }
+    result.push({
+      timestamp: entry.timestamp,
+      audioFileName: entry.audioFileName,
+      longitude: entry.longitude,
+      latitude: entry.latitude,
+    });
+  });
+  res.status(200).send(result);
+});
+
 async function contr() {
   const collection = db.collection("myCollection");
   const entries = await collection.find({}).toArray();
