@@ -41,3 +41,54 @@ exports.getData = async (req, res) => {
     res.status(500).send("Failed to retrieve data.");
   }
 };
+
+exports.getAudio = async (req, res) => {
+  const { fileName } = req.query;
+
+  if (!fileName) {
+    console.log("No file name provided.");
+    return res.status(400).send("No file name provided.");
+  }
+
+  try {
+    const audio = await audioService.getAudio(fileName);
+    res.status(200).send(audio);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to retrieve audio file.");
+  }
+};
+
+exports.tagEntry = async (req, res) => {
+  const { fileName, tag } = req.query;
+
+  if (!fileName || !tag) {
+    console.log("No file name or tag provided.");
+    return res.status(400).send("No file name or tag provided.");
+  }
+
+  try {
+    const result = await audioService.tagEntry(fileName, tag);
+    res.status(200).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to tag entry.");
+  }
+};
+
+exports.deleteEntry = async (req, res) => {
+  const { fileName } = req.query;
+
+  if (!fileName) {
+    console.log("No file name provided.");
+    return res.status(400).send("No file name provided.");
+  }
+
+  try {
+    const result = await audioService.deleteEntry(fileName);
+    res.status(200).send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to delete entry.");
+  }
+};

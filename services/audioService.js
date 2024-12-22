@@ -29,8 +29,61 @@ exports.saveAudio = async (audioData, senderId) => {
   return { message: "Audio file does not have human voice in it." };
 };
 
-exports.getFilteredRecords = async ({ minLat, maxLat, minLong, maxLong }) => {
+exports.getFilteredRecords = async ({
+  minLat,
+  maxLat,
+  minLong,
+  maxLong,
+  minTime,
+  maxTime,
+}) => {
+  if (minTime && maxTime) {
+    return dbService.getFilteredRecordsWithTime(
+      minLat,
+      maxLat,
+      minLong,
+      maxLong,
+      minTime,
+      maxTime
+    );
+  }
   return dbService.getFilteredRecords(minLat, maxLat, minLong, maxLong);
+};
+
+exports.getAudio = async (fileName) => {
+  try {
+    if (!fileName || fileName.includes("..") || path.isAbsolute(fileName)) {
+      throw new Error("Invalid file name.");
+    }
+
+    const filePath = path.join("./uploaded-audio", fileName + ".wav");
+
+    if (!fs.existsSync(filePath)) {
+      throw new Error("File not found.");
+    }
+
+    const audioBuffer = fs.readFileSync(filePath);
+    return audioBuffer;
+  } catch (err) {
+    console.error(err.message);
+    throw err;
+  }
+};
+
+exports.tagEntry = async (fileName, tag) => {
+  if (!fileName || !tag) {
+    throw new Error("Invalid input.");
+  }
+
+  return dbService.tagEntry(fileName, tag);
+};
+
+exports.deleteEntry = async (fileName) => {
+  if (!fileName) {
+    throw new Error("Invalid input.");
+  }
+
+  return dbService.deleteEntry(fileName);
 };
 
 const processAudioFile = async (audioFileName, senderId, timestampDB) => {

@@ -18,6 +18,9 @@ app.post("/upload-audio", audioController.uploadAudio);
 app.post("/upload-gps", gpsController.uploadGPS);
 app.get("/get-records", audioController.getRecords);
 app.get("/get-data", audioController.getData);
+app.get("/get-audio", audioController.getAudio);
+app.get("/tag-entry", audioController.tagEntry);
+app.get("/delete-entry", audioController.deleteEntry);
 
 const PORT = process.env.PORT || 3000;
 
