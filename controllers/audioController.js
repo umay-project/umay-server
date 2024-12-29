@@ -92,3 +92,13 @@ exports.deleteEntry = async (req, res) => {
     res.status(500).send("Failed to delete entry.");
   }
 };
+
+exports.getFalseTaggeds = async (req, res) => {
+  try {
+    const records = await dbService.getFalseTaggeds();
+    res.status(200).send(records);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Failed to retrieve false tagged records.");
+  }
+};

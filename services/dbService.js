@@ -89,3 +89,11 @@ exports.deleteEntry = async (fileName) => {
 
   return result;
 };
+
+exports.getFalseTaggeds = async () => {
+  const collection = db.collection("myCollection");
+
+  const result = await collection.find({ tag: "false" }).toArray();
+
+  return result;
+};
